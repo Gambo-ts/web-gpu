@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Gambo Starter — WebGPU + TypeScript</title>
+	<style>
+		:root { color-scheme: dark; }
+		html, body {
+			margin: 0;
+			min-height: 100%;
+			background: #0b0b0f;
+			color: #f2f2f5;
+			font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+		}
+		main {
+			max-width: 720px;
+			margin: 0 auto;
+			padding: 64px 24px 96px;
+		}
+		h1 {
+			font-size: 2rem;
+			margin-bottom: 4px;
+		}
+		.tagline {
+			color: #9a9aa5;
+			margin-top: 0;
+			margin-bottom: 40px;
+		}
+		section {
+			margin-bottom: 28px;
+		}
+		section h2 {
+			font-size: 1.1rem;
+			margin: 0 0 10px;
+			color: #9a9aa5;
+			font-weight: 600;
+		}
+		ul {
+			list-style: none;
+			padding: 0;
+			margin: 0;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+			gap: 10px;
+		}
+		li a {
+			display: block;
+			padding: 12px 16px;
+			border-radius: 10px;
+			background: #16161d;
+			border: 1px solid #26262f;
+			color: #f2f2f5;
+			text-decoration: none;
+			transition: border-color .15s ease, background .15s ease;
+		}
+		li a:hover {
+			border-color: #6e6ef0;
+			background: #1c1c26;
+		}
+		footer {
+			margin-top: 48px;
+			color: #6a6a75;
+			font-size: 0.85rem;
+		}
+	</style>
+</head>
+<body>
+	<main>
+		<h1>Gambo Starter</h1>
+		<p class="tagline">A TypeScript + WebGPU lesson scaffold — every lesson is a standalone Vite entry point, grouped by topic.</p>
+
+		<section>
+			<h2>Fundamentals</h2>
+			<ul>
+				<li><a href="./lessons/fundamentals/render-intro/">Render Intro</a></li>
+				<li><a href="./lessons/fundamentals/compute-intro/">Compute Intro</a></li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Buffers</h2>
+			<ul>
+				<li><a href="./lessons/buffers/vertex-buffers/">Vertex Buffers</a></li>
+				<li><a href="./lessons/buffers/vertex-buffers-2/">Vertex Buffers 2</a></li>
+				<li><a href="./lessons/buffers/uniforms/">Uniforms</a></li>
+				<li><a href="./lessons/buffers/uniforms-2/">Uniforms 2</a></li>
+				<li><a href="./lessons/buffers/storage-buffers/">Storage Buffers</a></li>
+				<li><a href="./lessons/buffers/storage-buffers-2/">Storage Buffers 2</a></li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Matrix Math</h2>
+			<ul>
+				<li><a href="./lessons/matrix-math/translation/">Translation</a></li>
+				<li><a href="./lessons/matrix-math/rotation/">Rotation</a></li>
+				<li><a href="./lessons/matrix-math/scale/">Scale</a></li>
+				<li><a href="./lessons/matrix-math/matrix-math/">Matrix Math</a></li>
+				<li><a href="./lessons/matrix-math/matrix-math-2/">Matrix Math 2</a></li>
+				<li><a href="./lessons/matrix-math/matrix-math-3/">Matrix Math 3</a></li>
+				<li><a href="./lessons/matrix-math/orthographic-projection/">Orthographic Projection</a></li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Shaders</h2>
+			<ul>
+				<li><a href="./lessons/shaders/inter-stage-variables/">Inter Stage Variables</a></li>
+			</ul>
+		</section>
+
+		<section>
+			<h2>Textures</h2>
+			<ul>
+				<li><a href="./lessons/textures/textures/">Textures</a></li>
+				<li><a href="./lessons/textures/textures-2/">Textures 2</a></li>
+				<li><a href="./lessons/textures/textures-3/">Textures 3</a></li>
+				<li><a href="./lessons/textures/importing-textures/">Importing Textures</a></li>
+				<li><a href="./lessons/textures/importing-textures-2/">Importing Textures 2</a></li>
+				<li><a href="./lessons/textures/importing-textures-3/">Importing Textures 3</a></li>
+			</ul>
+		</section>
+
+		<footer>Run <code>npm install &amp;&amp; npm run dev</code> to start exploring.</footer>
+	</main>
+</body>
+</html>
