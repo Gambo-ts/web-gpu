@@ -145,7 +145,7 @@ async function main() {
     pass.setPipeline(pipeline);
 
     const aspect = canvas.width / canvas.height;
-    for (let { scale, bindGroup, uniformBuffer, uniformValues } of objectInfos) {
+    for (const { scale, bindGroup, uniformBuffer, uniformValues } of objectInfos) {
       uniformValues.set([scale / aspect, scale], kScaleOffset);
       device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
       pass.setBindGroup(0, bindGroup);
