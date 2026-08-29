@@ -1,91 +1,68 @@
+import {
+  initWebGPU,
+  createShaderModule,
+  createRenderPipeline,
+  createRenderLoop,
+} from '@shared/webgpu/index.js';
+
 async function main() {
-	const adapter = await navigator.gpu?.requestAdapter();
-	const device = await adapter?.requestDevice();
-	if (!device) {
-		console.error("WebGPU not supported");
-		return;
-	}
+  try {
+    const context = await initWebGPU({
+      canvasSelector: 'canvas',
+      alphaMode: 'premultiplied',
+    });
 
-	const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-	const context = canvas.getContext("webgpu") as GPUCanvasContext;
-	const format = navigator.gpu.getPreferredCanvasFormat();
-	context.configure({
-		device,
-		format
-	});
+    const module = createShaderModule(
+      context.device,
+      'Green Triangle Shader',
+      /* wgsl */ `
+      @vertex fn vs(@builtin(vertex_index) vertexIndex: u32) -> @builtin(position) vec4f {
+        let pos = array(
+          vec2f(0.0, 0.5),
+          vec2f(-0.5, -0.5),
+          vec2f(0.5, -0.5),
+        );
+        return vec4f(pos[vertexIndex], 0.0, 1.0);
+      }
 
-	const module = device.createShaderModule({
-		label: "our hardcoded green triangle shaders",
-		code: /* wgsl */`
-		  @vertex fn vs(
-				@builtin(vertex_index) vertexIndex: u32
-			) -> @builtin(position) vec4f {
-				let pos = array(
-				  vec2f(0.0, 0.5),
-				  vec2f(-0.5, -0.5),
-				  vec2f(0.5, -0.5),
-				);
+      @fragment fn fs() -> @location(0) vec4f {
+        return vec4f(0.0, 1.0, 0.0, 1.0);
+      }
+    `
+    );
 
-				return vec4f(pos[vertexIndex], 0.0, 1.0);
-			}
+    const pipeline = createRenderPipeline(context.device, {
+      label: 'Green Triangle Pipeline',
+      layout: 'auto',
+      vertex: { entryPoint: 'vs', module },
+      fragment: { entryPoint: 'fs', module, targets: [{ format: context.format }] },
+    });
 
-			@fragment fn fs() -> @location(0) vec4f {
-				return vec4f(0.0, 1.0, 0.0, 1.0);
-			}
-		`
-	});
+    const renderPassDesc: GPURenderPassDescriptor = {
+      label: 'Render Pass',
+      colorAttachments: [
+        {
+          view: null as unknown as GPUTextureView,
+          clearValue: [0.3, 0.3, 0.3, 1.0],
+          loadOp: 'clear',
+          storeOp: 'store',
+        },
+      ],
+    };
 
-	const pipeline = device.createRenderPipeline({
-		label: "demo render pipeline",
-		layout: "auto",
-		vertex: {
-			entryPoint: "vs",
-			module,
-		},
-		fragment: {
-			entryPoint: "fs",
-			module,
-			targets: [{ format }],
-		}
-	});
+    const renderLoop = createRenderLoop({
+      context,
+      renderPassDesc,
+      onRender: pass => {
+        pass.setPipeline(pipeline);
+        pass.draw(3);
+      },
+    });
 
-	const renderPassDesc: GPURenderPassDescriptor = {
-		label: "demo render pass descriptor",
-		colorAttachments: [
-			{
-				view: null as unknown as GPUTextureView, // assigned per-frame in render()
-				clearValue: [0.3, 0.3, 0.3, 1.0],
-				loadOp: "clear",
-				storeOp: "store",
-			}
-		]
-	};
-
-	function render() {
-		renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
-
-		const encoder = device.createCommandEncoder({ label: "our demo encoder" });
-		const pass = encoder.beginRenderPass(renderPassDesc);
-		pass.setPipeline(pipeline);
-		pass.draw(3);
-		pass.end();
-
-		const commandBuffer = encoder.finish();
-		device.queue.submit([commandBuffer]);
-	}
-
-	const observer = new ResizeObserver(entries => {
-		for (const entry of entries) {
-			const canvas = entry.target as HTMLCanvasElement;
-			const width = entry.contentBoxSize[0].inlineSize;
-			const height = entry.contentBoxSize[0].blockSize;
-			canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
-			canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
-		}
-		render();
-	});
-
-	observer.observe(canvas);
+    renderLoop.start();
+  } catch (error) {
+    console.error('Failed to initialize WebGPU:', error);
+  }
 }
-main()
-export {};
+
+main();

@@ -10,7 +10,11 @@
     "skipLibCheck": true,
     "isolatedModules": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@shared/*": ["lessons/shared/*"]
+    }
   },
   "include": ["lessons/**/*.ts", "vite.config.ts"]
 }

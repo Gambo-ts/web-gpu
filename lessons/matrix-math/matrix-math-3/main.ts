@@ -1,5 +1,5 @@
-import * as dat from "dat.gui";
-import { mat3 } from "wgpu-matrix";
+import * as dat from 'dat.gui';
+import { mat3 } from 'wgpu-matrix';
 
 // prettier-ignore
 function createFVertices() {
@@ -40,21 +40,21 @@ async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
   if (!device) {
-    console.error("WebGPU not supported");
+    console.error('WebGPU not supported');
     return;
   }
 
-  const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-  const context = canvas.getContext("webgpu") as GPUCanvasContext;
+  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('webgpu') as GPUCanvasContext;
   const format = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
     device,
     format,
-    alphaMode: "premultiplied",
+    alphaMode: 'premultiplied',
   });
 
   const module = device.createShaderModule({
-    label: "our hardcoded green triangle shaders",
+    label: 'our hardcoded green triangle shaders',
     code: /* wgsl */ `
 			struct Uniforms {
   			color: vec4f,
@@ -96,29 +96,26 @@ async function main() {
   const kMatrixOffset = 8;
 
   const colorValue = uniformValues.subarray(kColorOffset, kColorOffset + 4);
-  const resolutionValue = uniformValues.subarray(
-    kResolutionOffset,
-    kResolutionOffset + 2,
-  );
+  const resolutionValue = uniformValues.subarray(kResolutionOffset, kResolutionOffset + 2);
   const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + 12);
 
   colorValue.set([Math.random(), Math.random(), Math.random(), 1]);
 
   const pipeline = device.createRenderPipeline({
-    label: "just 2d position",
-    layout: "auto",
+    label: 'just 2d position',
+    layout: 'auto',
     vertex: {
-      entryPoint: "vs",
+      entryPoint: 'vs',
       module,
       buffers: [
         {
           arrayStride: 2 * Float32Array.BYTES_PER_ELEMENT,
-          attributes: [{ shaderLocation: 0, format: "float32x2", offset: 0 }],
+          attributes: [{ shaderLocation: 0, format: 'float32x2', offset: 0 }],
         },
       ],
     },
     fragment: {
-      entryPoint: "fs",
+      entryPoint: 'fs',
       module,
       targets: [{ format }],
     },
@@ -144,12 +141,12 @@ async function main() {
   });
 
   const renderPassDesc: GPURenderPassDescriptor = {
-    label: "demo render pass descriptor",
+    label: 'demo render pass descriptor',
     colorAttachments: [
       {
         view: null as unknown as GPUTextureView, // assigned per-frame in render()
-        loadOp: "clear",
-        storeOp: "store",
+        loadOp: 'clear',
+        storeOp: 'store',
       },
     ],
   };
@@ -161,21 +158,19 @@ async function main() {
   };
 
   function render() {
-    renderPassDesc.colorAttachments[0].view = context
-      .getCurrentTexture()
-      .createView();
+    renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
 
     const encoder = device.createCommandEncoder();
     const pass = encoder.beginRenderPass(renderPassDesc);
     pass.setPipeline(pipeline);
     pass.setVertexBuffer(0, vertexBuffer);
-    pass.setIndexBuffer(indexBuffer, "uint32");
+    pass.setIndexBuffer(indexBuffer, 'uint32');
 
     resolutionValue.set([canvas.width, canvas.height]);
 
     const toClipSpace = mat3.multiply(
       mat3.multiply(mat3.scaling([1, -1]), mat3.translation([-1, -1])),
-      mat3.scaling([2 / canvas.clientWidth, 2 / canvas.clientHeight]),
+      mat3.scaling([2 / canvas.clientWidth, 2 / canvas.clientHeight])
     );
 
     const translationMatrix = mat3.translation(settings.translation);
@@ -196,19 +191,13 @@ async function main() {
     device.queue.submit([commandBuffer]);
   }
 
-  const observer = new ResizeObserver((entries) => {
+  const observer = new ResizeObserver(entries => {
     for (const entry of entries) {
       const canvas = entry.target as HTMLCanvasElement;
       const width = entry.contentBoxSize[0].inlineSize;
       const height = entry.contentBoxSize[0].blockSize;
-      canvas.width = Math.max(
-        1,
-        Math.min(width, device.limits.maxTextureDimension2D),
-      );
-      canvas.height = Math.max(
-        1,
-        Math.min(height, device.limits.maxTextureDimension2D),
-      );
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
     }
     render();
   });
@@ -216,16 +205,10 @@ async function main() {
   observer.observe(canvas);
 
   const gui = new dat.GUI({});
-  gui
-    .add(settings.translation, "0", 0, 1000)
-    .name("translation.x")
-    .onChange(render);
-  gui
-    .add(settings.translation, "1", 0, 1000)
-    .name("translation.y")
-    .onChange(render);
-  gui.add(settings, "rotation", -2 * Math.PI, 2 * Math.PI).onChange(render);
-  gui.add(settings.scale, "0", -5, 5).name("scale.x").onChange(render);
-  gui.add(settings.scale, "1", -5, 5).name("scale.y").onChange(render);
+  gui.add(settings.translation, '0', 0, 1000).name('translation.x').onChange(render);
+  gui.add(settings.translation, '1', 0, 1000).name('translation.y').onChange(render);
+  gui.add(settings, 'rotation', -2 * Math.PI, 2 * Math.PI).onChange(render);
+  gui.add(settings.scale, '0', -5, 5).name('scale.x').onChange(render);
+  gui.add(settings.scale, '1', -5, 5).name('scale.y').onChange(render);
 }
 main();

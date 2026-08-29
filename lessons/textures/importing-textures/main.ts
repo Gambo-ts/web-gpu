@@ -1,33 +1,34 @@
-import * as dat from "dat.gui";
+import * as dat from 'dat.gui';
 /**
  * @param {RequestInfo | URL} input
  * @returns {Promise<ImageBitmap>}
  */
 async function loadImageBitmap(input) {
-	const resp = await fetch(input);
-	const blob = await resp.blob();
-	return createImageBitmap(blob, { colorSpaceConversion: "none" });
+  const resp = await fetch(input);
+  const blob = await resp.blob();
+  return createImageBitmap(blob, { colorSpaceConversion: 'none' });
 }
 
 async function main() {
-	const adapter = await navigator.gpu?.requestAdapter();
-	const device = await adapter?.requestDevice();
-	if (!device) {
-		console.error("WebGPU not supported");
-		return;
-	}
+  const adapter = await navigator.gpu?.requestAdapter();
+  const device = await adapter?.requestDevice();
+  if (!device) {
+    console.error('WebGPU not supported');
+    return;
+  }
 
-	const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-	const context = canvas.getContext("webgpu") as GPUCanvasContext;
-	const format = navigator.gpu.getPreferredCanvasFormat();
-	context.configure({
-		device,
-		format
-	});
+  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('webgpu') as GPUCanvasContext;
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device,
+    format,
+    alphaMode: 'premultiplied',
+  });
 
-	const module = device.createShaderModule({
-		label: "our hardcoded RGB triangle shaders",
-		code: /* wgsl */`
+  const module = device.createShaderModule({
+    label: 'our hardcoded RGB triangle shaders',
+    code: /* wgsl */ `
 			struct OurVertexShaderOutput {
 				@builtin(position) position: vec4f,
 				@location(0) texcoord: vec2f,
@@ -61,113 +62,121 @@ async function main() {
 			@fragment fn fs(fsInput: OurVertexShaderOutput) -> @location(0) vec4f {
 				return textureSample(ourTexture, ourSampler, fsInput.texcoord);
 			}
-		`
-	});
+		`,
+  });
 
-	const pipeline = device.createRenderPipeline({
-		label: "demo render pipeline",
-		layout: "auto",
-		vertex: {
-			entryPoint: "vs",
-			module,
-		},
-		fragment: {
-			entryPoint: "fs",
-			module,
-			targets: [{ format }],
-		}
-	});
+  const pipeline = device.createRenderPipeline({
+    label: 'demo render pipeline',
+    layout: 'auto',
+    vertex: {
+      entryPoint: 'vs',
+      module,
+    },
+    fragment: {
+      entryPoint: 'fs',
+      module,
+      targets: [{ format }],
+    },
+  });
 
-	const url = "/assets/f-texture.png";
-	const source = await loadImageBitmap(url);
-	const texture = device.createTexture({
-		format: "rgba8unorm",
-		size: [source.width, source.height],
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-	});
+  const url = '/assets/f-texture.png';
+  const source = await loadImageBitmap(url);
+  const texture = device.createTexture({
+    format: 'rgba8unorm',
+    size: [source.width, source.height],
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT,
+  });
 
-	device.queue.copyExternalImageToTexture({ source, flipY: true }, { texture }, { width: source.width, height: source.height });
+  device.queue.copyExternalImageToTexture(
+    { source, flipY: true },
+    { texture },
+    { width: source.width, height: source.height }
+  );
 
-	/** @type {Array<GPUBindGroup>} */
-	const bindGroups = [];
-	for (let i = 0; i < 8; i++) {
-		const sampler = device.createSampler({
-			addressModeU: (i & 1) ? "repeat" : "clamp-to-edge",
-			addressModeV: (i & 2) ? "repeat" : "clamp-to-edge",
-			magFilter: (i & 4) ? "linear" : "nearest",
-		});
-		const bindGroup = device.createBindGroup({
-			layout: pipeline.getBindGroupLayout(0),
-			entries: [
-				{ binding: 0, resource: sampler },
-				{ binding: 1, resource: texture },
-			]
-		});
-		bindGroups.push(bindGroup);
-	}
+  /** @type {Array<GPUBindGroup>} */
+  const bindGroups = [];
+  for (let i = 0; i < 8; i++) {
+    const sampler = device.createSampler({
+      addressModeU: i & 1 ? 'repeat' : 'clamp-to-edge',
+      addressModeV: i & 2 ? 'repeat' : 'clamp-to-edge',
+      magFilter: i & 4 ? 'linear' : 'nearest',
+    });
+    const bindGroup = device.createBindGroup({
+      layout: pipeline.getBindGroupLayout(0),
+      entries: [
+        { binding: 0, resource: sampler },
+        { binding: 1, resource: texture },
+      ],
+    });
+    bindGroups.push(bindGroup);
+  }
 
-	/** @type{GPUSamplerDescriptor} */
-	const settings = {
-		addressModeU: "repeat",
-		addressModeV: "repeat",
-		magFilter: "linear",
-	};
+  /** @type{GPUSamplerDescriptor} */
+  const settings = {
+    addressModeU: 'repeat',
+    addressModeV: 'repeat',
+    magFilter: 'linear',
+  };
 
-	const renderPassDesc: GPURenderPassDescriptor = {
-		label: "demo render pass descriptor",
-		colorAttachments: [
-			{
-				view: null as unknown as GPUTextureView, // assigned per-frame in render()
-				clearValue: [0.3, 0.3, 0.3, 1.0],
-				loadOp: "clear",
-				storeOp: "store",
-			}
-		]
-	};
+  const renderPassDesc: GPURenderPassDescriptor = {
+    label: 'demo render pass descriptor',
+    colorAttachments: [
+      {
+        view: null as unknown as GPUTextureView, // assigned per-frame in render()
+        clearValue: [0.3, 0.3, 0.3, 1.0],
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+  };
 
-	function render() {
-		const bindGroupInd = (settings.addressModeU === "repeat" ? 1 : 0) +
-			(settings.addressModeV === "repeat" ? 2 : 0) +
-			(settings.magFilter === "linear" ? 4 : 0);
-		const bindGroup = bindGroups[bindGroupInd];
+  function render() {
+    const bindGroupInd =
+      (settings.addressModeU === 'repeat' ? 1 : 0) +
+      (settings.addressModeV === 'repeat' ? 2 : 0) +
+      (settings.magFilter === 'linear' ? 4 : 0);
+    const bindGroup = bindGroups[bindGroupInd];
 
-		renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
+    renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
 
-		const encoder = device.createCommandEncoder({ label: "our demo encoder" });
-		const pass = encoder.beginRenderPass(renderPassDesc);
-		pass.setPipeline(pipeline);
-		pass.setBindGroup(0, bindGroup);
-		pass.draw(6);
-		pass.end();
+    const encoder = device.createCommandEncoder({ label: 'our demo encoder' });
+    const pass = encoder.beginRenderPass(renderPassDesc);
+    pass.setPipeline(pipeline);
+    pass.setBindGroup(0, bindGroup);
+    pass.draw(6);
+    pass.end();
 
-		const commandBuffer = encoder.finish();
-		device.queue.submit([commandBuffer]);
-	}
+    const commandBuffer = encoder.finish();
+    device.queue.submit([commandBuffer]);
+  }
 
-	const observer = new ResizeObserver(entries => {
-		for (const entry of entries) {
-			const canvas = entry.target as HTMLCanvasElement;
-			const width = entry.contentBoxSize[0].inlineSize;
-			const height = entry.contentBoxSize[0].blockSize;
-			canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
-			canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
-		}
-		render();
-	});
+  const observer = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const canvas = entry.target as HTMLCanvasElement;
+      const width = entry.contentBoxSize[0].inlineSize;
+      const height = entry.contentBoxSize[0].blockSize;
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
+    }
+    render();
+  });
 
-	observer.observe(canvas);
+  observer.observe(canvas);
 
-	/** @type{Array<GPUAddressMode>} */
-	const addressOptions = ["repeat", "clamp-to-edge"];
-	/** @type{Array<GPUFilterMode>} */
-	const filterOptions = ["nearest", "linear"];
+  /** @type{Array<GPUAddressMode>} */
+  const addressOptions = ['repeat', 'clamp-to-edge'];
+  /** @type{Array<GPUFilterMode>} */
+  const filterOptions = ['nearest', 'linear'];
 
-	const gui = new dat.GUI({ autoPlace: false });
-	Object.assign(gui.domElement.style, { position: "absolute", top: "0", left: "0" });
-	document.body.appendChild(gui.domElement);
-	gui.add(settings, "addressModeU", addressOptions).onChange(render);
-	gui.add(settings, "addressModeV", addressOptions).onChange(render);
-	gui.add(settings, "magFilter", filterOptions).onChange(render);
+  const gui = new dat.GUI({ autoPlace: false });
+  Object.assign(gui.domElement.style, { position: 'absolute', top: '0', left: '0' });
+  document.body.appendChild(gui.domElement);
+  gui.add(settings, 'addressModeU', addressOptions).onChange(render);
+  gui.add(settings, 'addressModeV', addressOptions).onChange(render);
+  gui.add(settings, 'magFilter', filterOptions).onChange(render);
 }
 
-main()
+main();

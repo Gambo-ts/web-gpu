@@ -14,13 +14,13 @@ Sampling images on the GPU and loading them from the browser.
 
 ## Key concepts
 
-| Concept | Where it appears |
-| --- | --- |
+| Concept                                              | Where it appears             |
+| ---------------------------------------------------- | ---------------------------- |
 | `createTexture` + `queue.copyExternalImageToTexture` | Textures, Importing Textures |
-| Sampler creation + `textureSample` in WGSL | Textures |
-| `createImageBitmap` from a fetched URL | Importing Textures |
-| Mip-map generation (`generateMips`) | Importing Textures 2 |
-| Cube geometry + depth buffer | Importing Textures 3 |
+| Sampler creation + `textureSample` in WGSL           | Textures                     |
+| `createImageBitmap` from a fetched URL               | Importing Textures           |
+| Mip-map generation (`generateMips`)                  | Importing Textures 2         |
+| Cube geometry + depth buffer                         | Importing Textures 3         |
 
 ## Texture assets
 

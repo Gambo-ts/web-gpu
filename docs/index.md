@@ -2,8 +2,8 @@
 layout: home
 
 hero:
-  name: "Gambo Starter"
-  text: "TypeScript + WebGPU lessons"
+  name: 'Gambo Starter'
+  text: 'TypeScript + WebGPU lessons'
   tagline: A self-contained WebGPU lesson scaffold. No tutorial-site imports — everything runs from this repo.
   actions:
     - theme: brand

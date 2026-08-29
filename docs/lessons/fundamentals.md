@@ -11,13 +11,13 @@ Where every WebGPU journey starts: the render pipeline and the compute pipeline.
 
 ## Key concepts
 
-| Concept | Where it appears |
-| --- | --- |
-| `requestAdapter` / `requestDevice` | both lessons |
-| Canvas + `GPUCanvasContext.configure` | Render Intro |
-| `createShaderModule` with WGSL | Render Intro |
-| Render pipeline + render pass | Render Intro |
-| Compute pipeline + dispatch | Compute Intro |
+| Concept                               | Where it appears |
+| ------------------------------------- | ---------------- |
+| `requestAdapter` / `requestDevice`    | both lessons     |
+| Canvas + `GPUCanvasContext.configure` | Render Intro     |
+| `createShaderModule` with WGSL        | Render Intro     |
+| Render pipeline + render pass         | Render Intro     |
+| Compute pipeline + dispatch           | Compute Intro    |
 
 ## Try it
 

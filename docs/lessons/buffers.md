@@ -17,13 +17,13 @@ How data travels to and from the GPU.
 
 ## Key concepts
 
-| Concept | Where it appears |
-| --- | --- |
-| `createBuffer` + `writeBuffer` | all buffer lessons |
-| `setVertexBuffer` | Vertex Buffers |
-| `createBindGroup` / uniform bindings | Uniforms |
-| Storage buffer binding | Storage Buffers |
-| `dat.GUI` for live controls | Uniforms 2, Storage Buffers |
+| Concept                              | Where it appears            |
+| ------------------------------------ | --------------------------- |
+| `createBuffer` + `writeBuffer`       | all buffer lessons          |
+| `setVertexBuffer`                    | Vertex Buffers              |
+| `createBindGroup` / uniform bindings | Uniforms                    |
+| Storage buffer binding               | Storage Buffers             |
+| `dat.GUI` for live controls          | Uniforms 2, Storage Buffers |
 
 ## Try it
 
