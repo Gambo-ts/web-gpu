@@ -56,11 +56,11 @@ function createNextMipLevelRgba8Unorm({ data: src, width: srcWidth, height: srcH
   return { data: dst, width: dstWidth, height: dstHeight };
 }
 
-function generateMips(src, srcWidth) {
-  const srcHeight = src.length / 4 / srcWidth;
+function generateMips(src, srcWidth, srcHeight?: number) {
+  const height = srcHeight ?? src.length / 4 / srcWidth;
 
   // populate with first mip level (base level)
-  let mip = { data: src, width: srcWidth, height: srcHeight };
+  let mip = { data: src, width: srcWidth, height };
   const mips = [mip];
 
   while (mip.width > 1 || mip.height > 1) {
@@ -192,7 +192,7 @@ async function main() {
     ].flat()
   );
 
-  const mips = generateMips(textureData, kTextureWidth);
+  const mips = generateMips(textureData, kTextureWidth, kTextureHeight);
 
   const texture = device.createTexture({
     size: [mips[0].width, mips[0].height],

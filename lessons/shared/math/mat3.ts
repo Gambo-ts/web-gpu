@@ -53,14 +53,6 @@ export const mat3 = {
   fromMat4(m: Float32Array, out?: Mat3): Mat3 {
     return wgpuMat3.fromMat4(m, out as any) as Mat3;
   },
-
-  projection(width: number, height: number, out?: Mat3): Mat3 {
-    return wgpuMat3.projection(width, height, out as any) as Mat3;
-  },
-
-  orthographic(left: number, right: number, bottom: number, top: number, out?: Mat3): Mat3 {
-    return wgpuMat3.orthographic(left, right, bottom, top, out as any) as Mat3;
-  },
 };
 
 export function createTransformMatrix(

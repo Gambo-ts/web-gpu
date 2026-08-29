@@ -70,7 +70,7 @@ export const mat4 = {
     return wgpuMat4.perspective(fov, aspect, near, far, out as any) as Mat4;
   },
 
-  orthographic(
+  ortho(
     left: number,
     right: number,
     bottom: number,
@@ -79,7 +79,7 @@ export const mat4 = {
     far: number,
     out?: Mat4
   ): Mat4 {
-    return wgpuMat4.orthographic(left, right, bottom, top, near, far, out as any) as Mat4;
+    return wgpuMat4.ortho(left, right, bottom, top, near, far, out as any) as Mat4;
   },
 
   lookAt(
