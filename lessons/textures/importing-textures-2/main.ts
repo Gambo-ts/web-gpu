@@ -1,4 +1,4 @@
-import { mat4 } from "wgpu-matrix";
+import { mat4 } from 'wgpu-matrix';
 
 interface TextureSourceOptions {
   mips?: boolean;
@@ -6,8 +6,8 @@ interface TextureSourceOptions {
 }
 
 function numMipLevels(...sizes) {
-	const maxSize = Math.max(...sizes);
-	return 1 + Math.log2(maxSize) | 0;
+  const maxSize = Math.max(...sizes);
+  return (1 + Math.log2(maxSize)) | 0;
 }
 
 /**
@@ -15,28 +15,28 @@ function numMipLevels(...sizes) {
  * @returns {Promise<ImageBitmap>}
  */
 async function loadImageBitmap(input) {
-	const resp = await fetch(input);
-	const blob = await resp.blob();
-	return createImageBitmap(blob, { colorSpaceConversion: "none" });
+  const resp = await fetch(input);
+  const blob = await resp.blob();
+  return createImageBitmap(blob, { colorSpaceConversion: 'none' });
 }
 
 const generateMips = (() => {
-	/** @type{GPUSampler} */
-	let sampler;
-	/** @type{GPUShaderModule} */
-	let module;
-	/** @type{Record<GPUTextureFormat, GPURenderPipeline>} */
-	const pipelineByFormat = {};
+  /** @type{GPUSampler} */
+  let sampler;
+  /** @type{GPUShaderModule} */
+  let module;
+  /** @type{Record<GPUTextureFormat, GPURenderPipeline>} */
+  const pipelineByFormat = {};
 
-	/**
-	 * @param {GPUDevice} device
-	 * @param {GPUTexture} texture
-	 */
-	return function generateMips(device, texture) {
-		if (!module) {
-			module = device.createShaderModule({
-				label: 'textured quad shaders for mip level generation',
-				code: /* wgsl */`
+  /**
+   * @param {GPUDevice} device
+   * @param {GPUTexture} texture
+   */
+  return function generateMips(device, texture) {
+    if (!module) {
+      module = device.createShaderModule({
+        label: 'textured quad shaders for mip level generation',
+        code: /* wgsl */ `
 					struct VSOutput {
 						@builtin(position) position: vec4f,
 						@location(0) texcoord: vec2f,
@@ -70,71 +70,71 @@ const generateMips = (() => {
 					@fragment fn fs(fsInput: VSOutput) -> @location(0) vec4f {
 						return textureSample(ourTexture, ourSampler, fsInput.texcoord);
 					}
-				`
-			});
+				`,
+      });
 
-			sampler = device.createSampler({
-				minFilter: "linear"
-			});
-		}
+      sampler = device.createSampler({
+        minFilter: 'linear',
+      });
+    }
 
-		if (!pipelineByFormat[texture.format]) {
-			pipelineByFormat[texture.format] = device.createRenderPipeline({
-				layout: "auto",
-				vertex: {
-					module
-				},
-				fragment: {
-					module,
-					targets: [{ format: texture.format }],
-				}
-			});
-		}
-		const pipeline = pipelineByFormat[texture.format];
+    if (!pipelineByFormat[texture.format]) {
+      pipelineByFormat[texture.format] = device.createRenderPipeline({
+        layout: 'auto',
+        vertex: {
+          module,
+        },
+        fragment: {
+          module,
+          targets: [{ format: texture.format }],
+        },
+      });
+    }
+    const pipeline = pipelineByFormat[texture.format];
 
-		const encoder = device.createCommandEncoder({
-			label: "mip gen encoder",
-		});
+    const encoder = device.createCommandEncoder({
+      label: 'mip gen encoder',
+    });
 
-		for (let baseMipLevel = 1; baseMipLevel < texture.mipLevelCount; baseMipLevel++) {
-			const bindGroup = device.createBindGroup({
-				layout: pipeline.getBindGroupLayout(0),
-				entries: [
-					{ binding: 0, resource: sampler },
-					{
-						binding: 1,
-						resource: texture.createView({
-							baseMipLevel: baseMipLevel - 1,
-							mipLevelCount: 1
-						})
-					}
-				]
-			});
+    for (let baseMipLevel = 1; baseMipLevel < texture.mipLevelCount; baseMipLevel++) {
+      const bindGroup = device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: sampler },
+          {
+            binding: 1,
+            resource: texture.createView({
+              baseMipLevel: baseMipLevel - 1,
+              mipLevelCount: 1,
+            }),
+          },
+        ],
+      });
 
-			const renderPassDesc: GPURenderPassDescriptor = {
-				label: "our basic canvas renderPass",
-				colorAttachments: [
-					{
-						view: texture.createView({
-							baseMipLevel,
-							mipLevelCount: 1,
-						}),
-						loadOp: "clear",
-						storeOp: "store",
-					}
-				]
-			};
+      const renderPassDesc: GPURenderPassDescriptor = {
+        label: 'our basic canvas renderPass',
+        colorAttachments: [
+          {
+            view: texture.createView({
+              baseMipLevel,
+              mipLevelCount: 1,
+            }),
+            loadOp: 'clear',
+            storeOp: 'store',
+          },
+        ],
+      };
 
-			const pass = encoder.beginRenderPass(renderPassDesc);
-			pass.setPipeline(pipeline);
-			pass.setBindGroup(0, bindGroup);
-			pass.draw(6);
-			pass.end();
-		}
+      const pass = encoder.beginRenderPass(renderPassDesc);
+      pass.setPipeline(pipeline);
+      pass.setBindGroup(0, bindGroup);
+      pass.draw(6);
+      pass.end();
+    }
 
-		const commandBuffer = encoder.finish();
-		device.queue.submit([commandBuffer]);
-	};
+    const commandBuffer = encoder.finish();
+    device.queue.submit([commandBuffer]);
+  };
 })();
 
 /**
@@ -143,16 +143,12 @@ const generateMips = (() => {
  * @param {GPUCopyExternalImageSourceInfo} source
  */
 function copySourceToTexture(device, texture, source, { flipY }: TextureSourceOptions = {}) {
-	const { width, height } = source;
-	device.queue.copyExternalImageToTexture(
-		{ source, flipY },
-		{ texture },
-		{ width, height }
-	);
+  const { width, height } = source;
+  device.queue.copyExternalImageToTexture({ source, flipY }, { texture }, { width, height });
 
-	if (texture.mipLevelCount > 1) {
-		generateMips(device, texture);
-	}
+  if (texture.mipLevelCount > 1) {
+    generateMips(device, texture);
+  }
 }
 
 /**
@@ -161,14 +157,17 @@ function copySourceToTexture(device, texture, source, { flipY }: TextureSourceOp
  * @returns {GPUTexture}
  */
 function createTextureFromSource(device, source, options: TextureSourceOptions = {}) {
-	const texture = device.createTexture({
-		format: "rgba8unorm",
-		mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
-		size: [source.width, source.height],
-		usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT
-	});
-	copySourceToTexture(device, texture, source, options);
-	return texture;
+  const texture = device.createTexture({
+    format: 'rgba8unorm',
+    mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
+    size: [source.width, source.height],
+    usage:
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.RENDER_ATTACHMENT,
+  });
+  copySourceToTexture(device, texture, source, options);
+  return texture;
 }
 
 /**
@@ -177,29 +176,30 @@ function createTextureFromSource(device, source, options: TextureSourceOptions =
  * @returns {GPUTexture}
  */
 async function createTextureFromImage(device, url, options: TextureSourceOptions) {
-	const imgBitmap = await loadImageBitmap(url);
-	return createTextureFromSource(device, imgBitmap, options);
+  const imgBitmap = await loadImageBitmap(url);
+  return createTextureFromSource(device, imgBitmap, options);
 }
 
 async function main() {
-	const adapter = await navigator.gpu?.requestAdapter();
-	const device = await adapter?.requestDevice();
-	if (!device) {
-		console.error("WebGPU not supported");
-		return;
-	}
+  const adapter = await navigator.gpu?.requestAdapter();
+  const device = await adapter?.requestDevice();
+  if (!device) {
+    console.error('WebGPU not supported');
+    return;
+  }
 
-	const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-	const context = canvas.getContext("webgpu") as GPUCanvasContext;
-	const format = navigator.gpu.getPreferredCanvasFormat();
-	context.configure({
-		device,
-		format
-	});
+  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('webgpu') as GPUCanvasContext;
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device,
+    format,
+    alphaMode: 'premultiplied',
+  });
 
-	const module = device.createShaderModule({
-		label: "our hardcoded RGB triangle shaders",
-		code: /* wgsl */`
+  const module = device.createShaderModule({
+    label: 'our hardcoded RGB triangle shaders',
+    code: /* wgsl */ `
 			struct OurVertexShaderOutput {
 				@builtin(position) position: vec4f,
 				@location(0) texcoord: vec2f,
@@ -239,143 +239,145 @@ async function main() {
 			@fragment fn fs(fsInput: OurVertexShaderOutput) -> @location(0) vec4f {
 				return textureSample(ourTexture, ourSampler, fsInput.texcoord);
 			}
-		`
-	});
+		`,
+  });
 
-	const pipeline = device.createRenderPipeline({
-		label: "demo render pipeline",
-		layout: "auto",
-		vertex: {
-			entryPoint: "vs",
-			module,
-		},
-		fragment: {
-			entryPoint: "fs",
-			module,
-			targets: [{ format }],
-		}
-	});
+  const pipeline = device.createRenderPipeline({
+    label: 'demo render pipeline',
+    layout: 'auto',
+    vertex: {
+      entryPoint: 'vs',
+      module,
+    },
+    fragment: {
+      entryPoint: 'fs',
+      module,
+      targets: [{ format }],
+    },
+  });
 
-	const textures = await Promise.all([
-		createTextureFromImage(device, "/assets/f-texture.png", { mips: true, flipY: false }),
-		createTextureFromImage(device, "/assets/coins.jpg", { mips: true }),
-		createTextureFromImage(device, "/assets/Granite_paving_tileable_512x512.jpeg", { mips: true }),
-	]);
+  const textures = await Promise.all([
+    createTextureFromImage(device, '/assets/f-texture.png', { mips: true, flipY: false }),
+    createTextureFromImage(device, '/assets/coins.jpg', { mips: true }),
+    createTextureFromImage(device, '/assets/Granite_paving_tileable_512x512.jpeg', { mips: true }),
+  ]);
 
-	const kMatrixOffset = 0;
+  const kMatrixOffset = 0;
 
-	const objectInfos = [];
-	for (let i = 0; i < 8; i++) {
-		const sampler = device.createSampler({
-			addressModeU: "repeat",
-			addressModeV: "repeat",
-			magFilter: (i & 1) ? "linear" : "nearest",
-			minFilter: (i & 2) ? "linear" : "nearest",
-			mipmapFilter: (i & 4) ? "linear" : "nearest",
-		});
+  const objectInfos = [];
+  for (let i = 0; i < 8; i++) {
+    const sampler = device.createSampler({
+      addressModeU: 'repeat',
+      addressModeV: 'repeat',
+      magFilter: i & 1 ? 'linear' : 'nearest',
+      minFilter: i & 2 ? 'linear' : 'nearest',
+      mipmapFilter: i & 4 ? 'linear' : 'nearest',
+    });
 
-		const uniformValues = new Float32Array(16);
-		const matrix = uniformValues.subarray(kMatrixOffset, 16);
+    const uniformValues = new Float32Array(16);
+    const matrix = uniformValues.subarray(kMatrixOffset, 16);
 
-		const uniformBuffer = device.createBuffer({
-			size: uniformValues.byteLength,
-			usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST
-		});
+    const uniformBuffer = device.createBuffer({
+      size: uniformValues.byteLength,
+      usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST,
+    });
 
-		const bindGroups = textures.map(texture => device.createBindGroup({
-			layout: pipeline.getBindGroupLayout(0),
-			entries: [
-				{ binding: 0, resource: sampler },
-				{ binding: 1, resource: texture },
-				{ binding: 2, resource: uniformBuffer },
-			]
-		}));
+    const bindGroups = textures.map(texture =>
+      device.createBindGroup({
+        layout: pipeline.getBindGroupLayout(0),
+        entries: [
+          { binding: 0, resource: sampler },
+          { binding: 1, resource: texture },
+          { binding: 2, resource: uniformBuffer },
+        ],
+      })
+    );
 
-		objectInfos.push({
-			bindGroups,
-			matrix,
-			uniformValues,
-			uniformBuffer,
-		});
-	}
+    objectInfos.push({
+      bindGroups,
+      matrix,
+      uniformValues,
+      uniformBuffer,
+    });
+  }
 
-	const renderPassDesc: GPURenderPassDescriptor = {
-		label: "demo render pass descriptor",
-		colorAttachments: [
-			{
-				view: null as unknown as GPUTextureView, // assigned per-frame in render()
-				clearValue: [0.3, 0.3, 0.3, 1.0],
-				loadOp: "clear",
-				storeOp: "store",
-			}
-		]
-	};
+  const renderPassDesc: GPURenderPassDescriptor = {
+    label: 'demo render pass descriptor',
+    colorAttachments: [
+      {
+        view: null as unknown as GPUTextureView, // assigned per-frame in render()
+        clearValue: [0.3, 0.3, 0.3, 1.0],
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+  };
 
-	let texInd = 0;
+  let texInd = 0;
 
-	function render() {
-		const fov = 60 * Math.PI / 180; // 60 deg in radians
-		const aspect = canvas.clientWidth / canvas.clientHeight;
-		const zNear = 1;
-		const zFar = 2000;
-		const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
+  function render() {
+    const fov = (60 * Math.PI) / 180; // 60 deg in radians
+    const aspect = canvas.clientWidth / canvas.clientHeight;
+    const zNear = 1;
+    const zFar = 2000;
+    const projectionMatrix = mat4.perspective(fov, aspect, zNear, zFar);
 
-		const cameraPosition = [0, 0, 2];
-		const up = [0, 1, 0];
-		const target = [0, 0, 0];
-		const viewMatrix = mat4.lookAt(cameraPosition, target, up);
-		const viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
+    const cameraPosition = [0, 0, 2];
+    const up = [0, 1, 0];
+    const target = [0, 0, 0];
+    const viewMatrix = mat4.lookAt(cameraPosition, target, up);
+    const viewProjectionMatrix = mat4.multiply(projectionMatrix, viewMatrix);
 
-		renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
+    renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
 
-		const encoder = device.createCommandEncoder({ label: "our demo encoder" });
-		const pass = encoder.beginRenderPass(renderPassDesc);
-		pass.setPipeline(pipeline);
+    const encoder = device.createCommandEncoder({ label: 'our demo encoder' });
+    const pass = encoder.beginRenderPass(renderPassDesc);
+    pass.setPipeline(pipeline);
 
-		objectInfos.forEach(({ bindGroups, matrix, uniformValues, uniformBuffer }, i) => {
-			const bindGroup = bindGroups[texInd];
+    objectInfos.forEach(({ bindGroups, matrix, uniformValues, uniformBuffer }, i) => {
+      const bindGroup = bindGroups[texInd];
 
-			const xSpacing = 1.2;
-			const ySpacing = 0.7;
-			const zDepth = 50;
+      const xSpacing = 1.2;
+      const ySpacing = 0.7;
+      const zDepth = 50;
 
-			const x = i % 4 - 1.5;
-			const y = i < 4 ? 1 : -1;
+      const x = (i % 4) - 1.5;
+      const y = i < 4 ? 1 : -1;
 
-			mat4.translate(viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
-			mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
-			mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
-			mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
+      mat4.translate(viewProjectionMatrix, [x * xSpacing, y * ySpacing, -zDepth * 0.5], matrix);
+      mat4.rotateX(matrix, 0.5 * Math.PI, matrix);
+      mat4.scale(matrix, [1, zDepth * 2, 1], matrix);
+      mat4.translate(matrix, [-0.5, -0.5, 0], matrix);
 
-			device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
+      device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
-			pass.setBindGroup(0, bindGroup);
-			pass.draw(6)
-		});
+      pass.setBindGroup(0, bindGroup);
+      pass.draw(6);
+    });
 
-		pass.end();
+    pass.end();
 
-		const commandBuffer = encoder.finish();
-		device.queue.submit([commandBuffer]);
-	}
+    const commandBuffer = encoder.finish();
+    device.queue.submit([commandBuffer]);
+  }
 
-	const observer = new ResizeObserver(entries => {
-		for (const entry of entries) {
-			const canvas = entry.target as HTMLCanvasElement;
-			const width = entry.contentBoxSize[0].inlineSize;
-			const height = entry.contentBoxSize[0].blockSize;
-			canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
-			canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
-			render();
-		}
-	});
+  const observer = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const canvas = entry.target as HTMLCanvasElement;
+      const width = entry.contentBoxSize[0].inlineSize;
+      const height = entry.contentBoxSize[0].blockSize;
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
+      render();
+    }
+  });
 
-	observer.observe(canvas);
+  observer.observe(canvas);
 
-	canvas.addEventListener("click", () => {
-		texInd = (texInd + 1) % textures.length;
-		render();
-	});
+  canvas.addEventListener('click', () => {
+    texInd = (texInd + 1) % textures.length;
+    render();
+  });
 }
 
-main()
+main();

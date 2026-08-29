@@ -1,5 +1,5 @@
-import * as dat from "dat.gui";
-import { mat4 } from "wgpu-matrix";
+import * as dat from 'dat.gui';
+import { mat4 } from 'wgpu-matrix';
 
 interface TextureSourceOptions {
   mips?: boolean;
@@ -75,7 +75,7 @@ function numMipLevels(...sizes) {
 async function loadImageBitmap(input) {
   const resp = await fetch(input);
   const blob = await resp.blob();
-  return createImageBitmap(blob, { colorSpaceConversion: "none" });
+  return createImageBitmap(blob, { colorSpaceConversion: 'none' });
 }
 
 const generateMips = (() => {
@@ -93,7 +93,7 @@ const generateMips = (() => {
   return function generateMips(device, texture) {
     if (!module) {
       module = device.createShaderModule({
-        label: "textured quad shaders for mip level generation",
+        label: 'textured quad shaders for mip level generation',
         code: /* wgsl */ `
 					struct VSOutput {
 						@builtin(position) position: vec4f,
@@ -132,13 +132,13 @@ const generateMips = (() => {
       });
 
       sampler = device.createSampler({
-        minFilter: "linear",
+        minFilter: 'linear',
       });
     }
 
     if (!pipelineByFormat[texture.format]) {
       pipelineByFormat[texture.format] = device.createRenderPipeline({
-        layout: "auto",
+        layout: 'auto',
         vertex: {
           module,
         },
@@ -151,14 +151,10 @@ const generateMips = (() => {
     const pipeline = pipelineByFormat[texture.format];
 
     const encoder = device.createCommandEncoder({
-      label: "mip gen encoder",
+      label: 'mip gen encoder',
     });
 
-    for (
-      let baseMipLevel = 1;
-      baseMipLevel < texture.mipLevelCount;
-      baseMipLevel++
-    ) {
+    for (let baseMipLevel = 1; baseMipLevel < texture.mipLevelCount; baseMipLevel++) {
       const bindGroup = device.createBindGroup({
         layout: pipeline.getBindGroupLayout(0),
         entries: [
@@ -174,15 +170,15 @@ const generateMips = (() => {
       });
 
       const renderPassDesc: GPURenderPassDescriptor = {
-        label: "our basic canvas renderPass",
+        label: 'our basic canvas renderPass',
         colorAttachments: [
           {
             view: texture.createView({
               baseMipLevel,
               mipLevelCount: 1,
             }),
-            loadOp: "clear",
-            storeOp: "store",
+            loadOp: 'clear',
+            storeOp: 'store',
           },
         ],
       };
@@ -206,11 +202,7 @@ const generateMips = (() => {
  */
 function copySourceToTexture(device, texture, source, { flipY }: TextureSourceOptions = {}) {
   const { width, height } = source;
-  device.queue.copyExternalImageToTexture(
-    { source, flipY },
-    { texture },
-    { width, height },
-  );
+  device.queue.copyExternalImageToTexture({ source, flipY }, { texture }, { width, height });
 
   if (texture.mipLevelCount > 1) {
     generateMips(device, texture);
@@ -224,7 +216,7 @@ function copySourceToTexture(device, texture, source, { flipY }: TextureSourceOp
  */
 function createTextureFromSource(device, source, options: TextureSourceOptions = {}) {
   const texture = device.createTexture({
-    format: "rgba8unorm",
+    format: 'rgba8unorm',
     mipLevelCount: options.mips ? numMipLevels(source.width, source.height) : 1,
     size: [source.width, source.height],
     usage:
@@ -250,21 +242,21 @@ async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
   if (!device) {
-    console.error("WebGPU not supported");
+    console.error('WebGPU not supported');
     return;
   }
 
-  const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-  const context = canvas.getContext("webgpu") as GPUCanvasContext;
+  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('webgpu') as GPUCanvasContext;
   const format = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
     device,
     format,
-    alphaMode: "premultiplied",
+    alphaMode: 'premultiplied',
   });
 
   const module = device.createShaderModule({
-    label: "our hardcoded RGB triangle shaders",
+    label: 'our hardcoded RGB triangle shaders',
     code: /* wgsl */ `
       struct Uniforms {
         matrix: mat4x4f,
@@ -298,19 +290,19 @@ async function main() {
   });
 
   const pipeline = device.createRenderPipeline({
-    label: "demo render pipeline",
-    layout: "auto",
+    label: 'demo render pipeline',
+    layout: 'auto',
     vertex: {
-      entryPoint: "vs",
+      entryPoint: 'vs',
       module,
       buffers: [
         {
           arrayStride: (3 + 2) * Float32Array.BYTES_PER_ELEMENT,
           attributes: [
-            { shaderLocation: 0, format: "float32x3", offset: 0 }, // position
+            { shaderLocation: 0, format: 'float32x3', offset: 0 }, // position
             {
               shaderLocation: 1,
-              format: "float32x2",
+              format: 'float32x2',
               offset: 3 * Float32Array.BYTES_PER_ELEMENT,
             }, // texcoord
           ],
@@ -318,30 +310,29 @@ async function main() {
       ],
     },
     fragment: {
-      entryPoint: "fs",
+      entryPoint: 'fs',
       module,
       targets: [{ format }],
     },
     primitive: {
-      cullMode: "back",
+      cullMode: 'back',
     },
     depthStencil: {
       depthWriteEnabled: true,
-      depthCompare: "less",
-      format: "depth24plus",
+      depthCompare: 'less',
+      format: 'depth24plus',
     },
   });
 
-  const texture = await createTextureFromImage(
-    device,
-    "/assets/noodles.jpg",
-    { mips: true, flipY: false },
-  );
+  const texture = await createTextureFromImage(device, '/assets/noodles.jpg', {
+    mips: true,
+    flipY: false,
+  });
 
   const sampler = device.createSampler({
-    magFilter: "linear",
-    minFilter: "linear",
-    mipmapFilter: "linear",
+    magFilter: 'linear',
+    minFilter: 'linear',
+    mipmapFilter: 'linear',
   });
 
   const uniformValues = new Float32Array(16);
@@ -377,13 +368,13 @@ async function main() {
   });
 
   const renderPassDesc: GPURenderPassDescriptor = {
-    label: "demo render pass descriptor",
+    label: 'demo render pass descriptor',
     colorAttachments: [
       {
         view: null as unknown as GPUTextureView, // assigned per-frame in render()
         clearValue: [0.3, 0.3, 0.3, 1.0],
-        loadOp: "clear",
-        storeOp: "store",
+        loadOp: 'clear',
+        storeOp: 'store',
       },
     ],
     depthStencilAttachment: undefined as GPURenderPassDepthStencilAttachment | undefined,
@@ -394,9 +385,7 @@ async function main() {
   function render() {
     const canvasTexture = context.getCurrentTexture();
 
-    renderPassDesc.colorAttachments[0].view = context
-      .getCurrentTexture()
-      .createView();
+    renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
 
     if (
       !depthTexture ||
@@ -408,7 +397,7 @@ async function main() {
       }
       depthTexture = device.createTexture({
         size: [canvasTexture.width, canvasTexture.height],
-        format: "depth24plus",
+        format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
       });
     }
@@ -416,15 +405,15 @@ async function main() {
     renderPassDesc.depthStencilAttachment = {
       view: depthTexture.createView(),
       depthClearValue: 1.0,
-      depthLoadOp: "clear",
-      depthStoreOp: "store",
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
     };
 
-    const encoder = device.createCommandEncoder({ label: "our demo encoder" });
+    const encoder = device.createCommandEncoder({ label: 'our demo encoder' });
     const pass = encoder.beginRenderPass(renderPassDesc);
     pass.setPipeline(pipeline);
     pass.setVertexBuffer(0, vertexBuffer);
-    pass.setIndexBuffer(indexBuffer, "uint16");
+    pass.setIndexBuffer(indexBuffer, 'uint16');
 
     const aspect = canvas.clientWidth / canvas.clientHeight;
     mat4.perspective(
@@ -432,12 +421,12 @@ async function main() {
       aspect,
       0.1, // zNear
       10, // zFar
-      matrixValue,
+      matrixValue
     );
     const view = mat4.lookAt(
       [0, 1, 5], // camera position
       [0, 0, 0], // target
-      [0, 1, 0], // up
+      [0, 1, 0] // up
     );
     mat4.multiply(matrixValue, view, matrixValue);
     mat4.rotateX(matrixValue, degToRad(settings.rotation[0]), matrixValue);
@@ -454,19 +443,13 @@ async function main() {
     device.queue.submit([commandBuffer]);
   }
 
-  const observer = new ResizeObserver((entries) => {
+  const observer = new ResizeObserver(entries => {
     for (const entry of entries) {
       const canvas = entry.target as HTMLCanvasElement;
       const width = entry.contentBoxSize[0].inlineSize;
       const height = entry.contentBoxSize[0].blockSize;
-      canvas.width = Math.max(
-        1,
-        Math.min(width, device.limits.maxTextureDimension2D),
-      );
-      canvas.height = Math.max(
-        1,
-        Math.min(height, device.limits.maxTextureDimension2D),
-      );
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
       render();
     }
   });
@@ -479,23 +462,14 @@ async function main() {
 
   const gui = new dat.GUI({ autoPlace: false });
   Object.assign(gui.domElement.style, {
-    position: "absolute",
-    top: "0",
-    left: "0",
+    position: 'absolute',
+    top: '0',
+    left: '0',
   });
   document.body.appendChild(gui.domElement);
-  gui
-    .add(settings.rotation, "0", -180, 180, 1)
-    .name("rotation.x")
-    .onChange(render);
-  gui
-    .add(settings.rotation, "1", -180, 180, 1)
-    .name("rotation.y")
-    .onChange(render);
-  gui
-    .add(settings.rotation, "2", -180, 180, 1)
-    .name("rotation.z")
-    .onChange(render);
+  gui.add(settings.rotation, '0', -180, 180, 1).name('rotation.x').onChange(render);
+  gui.add(settings.rotation, '1', -180, 180, 1).name('rotation.y').onChange(render);
+  gui.add(settings.rotation, '2', -180, 180, 1).name('rotation.z').onChange(render);
 }
 
 main();

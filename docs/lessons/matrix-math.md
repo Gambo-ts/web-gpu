@@ -15,13 +15,13 @@ Transforms and projection, from the ground up.
 
 ## Key concepts
 
-| Concept | Where it appears |
-| --- | --- |
-| `wgpu-matrix` (`mat3`, `mat4`) | Translation through Matrix Math |
-| Matrix multiplication to compose transforms | Matrix Math 2 |
-| 3D matrices (`mat4`) | Matrix Math 3, Orthographic Projection |
-| Depth texture + depth stencil attachment | Orthographic Projection |
-| GUI-indexed matrix values (`[number, number]` tuples) | most lessons |
+| Concept                                               | Where it appears                       |
+| ----------------------------------------------------- | -------------------------------------- |
+| `wgpu-matrix` (`mat3`, `mat4`)                        | Translation through Matrix Math        |
+| Matrix multiplication to compose transforms           | Matrix Math 2                          |
+| 3D matrices (`mat4`)                                  | Matrix Math 3, Orthographic Projection |
+| Depth texture + depth stencil attachment              | Orthographic Projection                |
+| GUI-indexed matrix values (`[number, number]` tuples) | most lessons                           |
 
 ## Try it
 

@@ -1,4 +1,5 @@
 Place lesson texture images here:
+
 - f-texture.png
 - coins.jpg
 - noodles.jpg

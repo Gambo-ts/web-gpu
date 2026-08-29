@@ -54,7 +54,7 @@ grouped by topic.
 
 Three lessons (`textures-2`, `importing-textures*`) load bitmap images
 (`f-texture.png`, `coins.jpg`, `noodles.jpg`,
-`Granite_paving_tileable_512x512.jpeg`). Those are demo *assets*, not
+`Granite_paving_tileable_512x512.jpeg`). Those are demo _assets_, not
 tutorial-site branding, so they weren't rewritten — the code now expects them
 at `public/assets/<filename>`. Drop your own versions of those files in (any
 image works; they're just texture-mapping demos) and the lessons will run.

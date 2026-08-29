@@ -1,22 +1,23 @@
 async function main() {
-	const adapter = await navigator.gpu?.requestAdapter();
-	const device = await adapter?.requestDevice();
-	if (!device) {
-		console.error("WebGPU not supported");
-		return;
-	}
+  const adapter = await navigator.gpu?.requestAdapter();
+  const device = await adapter?.requestDevice();
+  if (!device) {
+    console.error('WebGPU not supported');
+    return;
+  }
 
-	const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-	const context = canvas.getContext("webgpu") as GPUCanvasContext;
-	const format = navigator.gpu.getPreferredCanvasFormat();
-	context.configure({
-		device,
-		format
-	});
+  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('webgpu') as GPUCanvasContext;
+  const format = navigator.gpu.getPreferredCanvasFormat();
+  context.configure({
+    device,
+    format,
+    alphaMode: 'premultiplied',
+  });
 
-	const module = device.createShaderModule({
-		label: "our hardcoded RGB triangle shaders",
-		code: /* wgsl */`
+  const module = device.createShaderModule({
+    label: 'our hardcoded RGB triangle shaders',
+    code: /* wgsl */ `
 			struct OurVertexShaderOutput {
 				@builtin(position) position: vec4f,
 				@location(0) color: vec4f,
@@ -45,60 +46,60 @@ async function main() {
 			@fragment fn fs(fsInput: OurVertexShaderOutput) -> @location(0) vec4f {
 				return fsInput.color;
 			}
-		`
-	});
+		`,
+  });
 
-	const pipeline = device.createRenderPipeline({
-		label: "demo render pipeline",
-		layout: "auto",
-		vertex: {
-			entryPoint: "vs",
-			module,
-		},
-		fragment: {
-			entryPoint: "fs",
-			module,
-			targets: [{ format }],
-		}
-	});
+  const pipeline = device.createRenderPipeline({
+    label: 'demo render pipeline',
+    layout: 'auto',
+    vertex: {
+      entryPoint: 'vs',
+      module,
+    },
+    fragment: {
+      entryPoint: 'fs',
+      module,
+      targets: [{ format }],
+    },
+  });
 
-	const renderPassDesc: GPURenderPassDescriptor = {
-		label: "demo render pass descriptor",
-		colorAttachments: [
-			{
-				view: null as unknown as GPUTextureView, // assigned per-frame in render()
-				clearValue: [0.3, 0.3, 0.3, 1.0],
-				loadOp: "clear",
-				storeOp: "store",
-			}
-		]
-	};
+  const renderPassDesc: GPURenderPassDescriptor = {
+    label: 'demo render pass descriptor',
+    colorAttachments: [
+      {
+        view: null as unknown as GPUTextureView, // assigned per-frame in render()
+        clearValue: [0.3, 0.3, 0.3, 1.0],
+        loadOp: 'clear',
+        storeOp: 'store',
+      },
+    ],
+  };
 
-	function render() {
-		renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
+  function render() {
+    renderPassDesc.colorAttachments[0].view = context.getCurrentTexture().createView();
 
-		const encoder = device.createCommandEncoder({ label: "our demo encoder" });
-		const pass = encoder.beginRenderPass(renderPassDesc);
-		pass.setPipeline(pipeline);
-		pass.draw(3);
-		pass.end();
+    const encoder = device.createCommandEncoder({ label: 'our demo encoder' });
+    const pass = encoder.beginRenderPass(renderPassDesc);
+    pass.setPipeline(pipeline);
+    pass.draw(3);
+    pass.end();
 
-		const commandBuffer = encoder.finish();
-		device.queue.submit([commandBuffer]);
-	}
+    const commandBuffer = encoder.finish();
+    device.queue.submit([commandBuffer]);
+  }
 
-	const observer = new ResizeObserver(entries => {
-		for (const entry of entries) {
-			const canvas = entry.target as HTMLCanvasElement;
-			const width = entry.contentBoxSize[0].inlineSize;
-			const height = entry.contentBoxSize[0].blockSize;
-			canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
-			canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
-		}
-		render();
-	});
+  const observer = new ResizeObserver(entries => {
+    for (const entry of entries) {
+      const canvas = entry.target as HTMLCanvasElement;
+      const width = entry.contentBoxSize[0].inlineSize;
+      const height = entry.contentBoxSize[0].blockSize;
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
+    }
+    render();
+  });
 
-	observer.observe(canvas);
+  observer.observe(canvas);
 }
-main()
+main();
 export {};

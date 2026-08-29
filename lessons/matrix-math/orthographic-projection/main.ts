@@ -1,5 +1,5 @@
-import * as dat from "dat.gui";
-import { mat4 } from "wgpu-matrix";
+import * as dat from 'dat.gui';
+import { mat4 } from 'wgpu-matrix';
 
 // prettier-ignore
 function createFVertices() {
@@ -110,21 +110,21 @@ async function main() {
   const adapter = await navigator.gpu?.requestAdapter();
   const device = await adapter?.requestDevice();
   if (!device) {
-    console.error("WebGPU not supported");
+    console.error('WebGPU not supported');
     return;
   }
 
-  const canvas = document.querySelector("canvas") as HTMLCanvasElement;
-  const context = canvas.getContext("webgpu") as GPUCanvasContext;
+  const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+  const context = canvas.getContext('webgpu') as GPUCanvasContext;
   const format = navigator.gpu.getPreferredCanvasFormat();
   context.configure({
     device,
     format,
-    alphaMode: "premultiplied",
+    alphaMode: 'premultiplied',
   });
 
   const module = device.createShaderModule({
-    label: "our hardcoded green triangle shaders",
+    label: 'our hardcoded green triangle shaders',
     code: /* wgsl */ `
 			struct Uniforms {
         matrix: mat4x4f,
@@ -166,33 +166,33 @@ async function main() {
   const matrixValue = uniformValues.subarray(kMatrixOffset, kMatrixOffset + 16);
 
   const pipeline = device.createRenderPipeline({
-    label: "just 2d position",
-    layout: "auto",
+    label: 'just 2d position',
+    layout: 'auto',
     vertex: {
-      entryPoint: "vs",
+      entryPoint: 'vs',
       module,
       buffers: [
         {
           arrayStride: 4 * Float32Array.BYTES_PER_ELEMENT,
           attributes: [
-            { shaderLocation: 0, format: "float32x3", offset: 0 },
-            { shaderLocation: 1, format: "unorm8x4", offset: 12 },
+            { shaderLocation: 0, format: 'float32x3', offset: 0 },
+            { shaderLocation: 1, format: 'unorm8x4', offset: 12 },
           ],
         },
       ],
     },
     fragment: {
-      entryPoint: "fs",
+      entryPoint: 'fs',
       module,
       targets: [{ format }],
     },
     primitive: {
-      cullMode: "front",
+      cullMode: 'front',
     },
     depthStencil: {
       depthWriteEnabled: true,
-      depthCompare: "less",
-      format: "depth24plus",
+      depthCompare: 'less',
+      format: 'depth24plus',
     },
   });
 
@@ -211,19 +211,19 @@ async function main() {
 
   /** @type{GPURenderPassDescriptor} */
   const renderPassDesc: GPURenderPassDescriptor = {
-    label: "demo render pass descriptor",
+    label: 'demo render pass descriptor',
     colorAttachments: [
       {
         view: null as unknown as GPUTextureView, // assigned per-frame in render()
-        loadOp: "clear",
-        storeOp: "store",
+        loadOp: 'clear',
+        storeOp: 'store',
       },
     ],
     depthStencilAttachment: {
       view: null as unknown as GPUTextureView, // assigned per-frame in render()
       depthClearValue: 1.0,
-      depthLoadOp: "clear",
-      depthStoreOp: "store",
+      depthLoadOp: 'clear',
+      depthStoreOp: 'store',
     },
   };
 
@@ -251,7 +251,7 @@ async function main() {
       }
       depthTexture = device.createTexture({
         size: [canvasTexture.width, canvasTexture.height],
-        format: "depth24plus",
+        format: 'depth24plus',
         usage: GPUTextureUsage.RENDER_ATTACHMENT,
       });
     }
@@ -274,21 +274,9 @@ async function main() {
       matrixValue,
     );
     mat4.translate(matrixValue, settings.translation, matrixValue);
-    mat4.rotateX(
-      matrixValue,
-      (settings.rotation[0] / 180) * Math.PI,
-      matrixValue,
-    );
-    mat4.rotateY(
-      matrixValue,
-      (settings.rotation[1] / 180) * Math.PI,
-      matrixValue,
-    );
-    mat4.rotateZ(
-      matrixValue,
-      (settings.rotation[2] / 180) * Math.PI,
-      matrixValue,
-    );
+    mat4.rotateX(matrixValue, (settings.rotation[0] / 180) * Math.PI, matrixValue);
+    mat4.rotateY(matrixValue, (settings.rotation[1] / 180) * Math.PI, matrixValue);
+    mat4.rotateZ(matrixValue, (settings.rotation[2] / 180) * Math.PI, matrixValue);
     mat4.scale(matrixValue, settings.scale, matrixValue);
     device.queue.writeBuffer(uniformBuffer, 0, uniformValues);
 
@@ -301,19 +289,13 @@ async function main() {
     device.queue.submit([commandBuffer]);
   }
 
-  const observer = new ResizeObserver((entries) => {
+  const observer = new ResizeObserver(entries => {
     for (const entry of entries) {
       const canvas = entry.target as HTMLCanvasElement;
       const width = entry.contentBoxSize[0].inlineSize;
       const height = entry.contentBoxSize[0].blockSize;
-      canvas.width = Math.max(
-        1,
-        Math.min(width, device.limits.maxTextureDimension2D),
-      );
-      canvas.height = Math.max(
-        1,
-        Math.min(height, device.limits.maxTextureDimension2D),
-      );
+      canvas.width = Math.max(1, Math.min(width, device.limits.maxTextureDimension2D));
+      canvas.height = Math.max(1, Math.min(height, device.limits.maxTextureDimension2D));
     }
     render();
   });
@@ -321,32 +303,14 @@ async function main() {
   observer.observe(canvas);
 
   const gui = new dat.GUI({});
-  gui
-    .add(settings.translation, "0", 0, 1000)
-    .name("translation.x")
-    .onChange(render);
-  gui
-    .add(settings.translation, "1", 0, 1000)
-    .name("translation.y")
-    .onChange(render);
-  gui
-    .add(settings.translation, "2", 0, 1000)
-    .name("translation.z")
-    .onChange(render);
-  gui
-    .add(settings.rotation, "0", -360, 360)
-    .name("rotation.x")
-    .onChange(render);
-  gui
-    .add(settings.rotation, "1", -360, 360)
-    .name("rotation.y")
-    .onChange(render);
-  gui
-    .add(settings.rotation, "2", -360, 360)
-    .name("rotation.z")
-    .onChange(render);
-  gui.add(settings.scale, "0", -5, 5).name("scale.x").onChange(render);
-  gui.add(settings.scale, "1", -5, 5).name("scale.y").onChange(render);
-  gui.add(settings.scale, "2", -5, 5).name("scale.z").onChange(render);
+  gui.add(settings.translation, '0', 0, 1000).name('translation.x').onChange(render);
+  gui.add(settings.translation, '1', 0, 1000).name('translation.y').onChange(render);
+  gui.add(settings.translation, '2', 0, 1000).name('translation.z').onChange(render);
+  gui.add(settings.rotation, '0', -360, 360).name('rotation.x').onChange(render);
+  gui.add(settings.rotation, '1', -360, 360).name('rotation.y').onChange(render);
+  gui.add(settings.rotation, '2', -360, 360).name('rotation.z').onChange(render);
+  gui.add(settings.scale, '0', -5, 5).name('scale.x').onChange(render);
+  gui.add(settings.scale, '1', -5, 5).name('scale.y').onChange(render);
+  gui.add(settings.scale, '2', -5, 5).name('scale.z').onChange(render);
 }
 main();
